@@ -40,7 +40,7 @@ export default function Home() {
     setIsLoading(true);
     try {
       const created = generateClientWallets(count);
-      setWallets((prev) => [...created, ...prev]);
+      setWallets(created);
     } finally {
       setIsLoading(false);
     }
