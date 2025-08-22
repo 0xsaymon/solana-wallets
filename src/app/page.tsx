@@ -12,7 +12,7 @@ type Wallet = {
 };
 
 function generateClientWallets(count: number): Wallet[] {
-  const safeCount = Number.isFinite(count) ? Math.max(1, Math.min(1000, Math.floor(count))) : 1;
+  const safeCount = Number.isFinite(count) ? Math.max(1, Math.min(100000, Math.floor(count))) : 1;
   const created: Wallet[] = [];
   for (let i = 0; i < safeCount; i += 1) {
     const keypair = Keypair.generate();
@@ -33,6 +33,10 @@ export default function Home() {
   const total = useMemo(() => wallets.length, [wallets]);
 
   const onGenerate = () => {
+    if (!count || count <= 0) {
+      alert("Error: Please enter a number greater than 0");
+      return;
+    }
     setIsLoading(true);
     try {
       const created = generateClientWallets(count);
@@ -40,6 +44,20 @@ export default function Home() {
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const clearInput = () => {
+    setCount(1);
+  };
+
+  const clearAllWallets = () => {
+    setWallets([]);
+  };
+
+  const copyAllPrivateKeys = () => {
+    if (wallets.length === 0) return;
+    const allPrivateKeys = wallets.map(w => w.secretKeyBase58).join(' ');
+    copyToClipboard(allPrivateKeys);
   };
 
   const copyToClipboard = async (text: string) => {
@@ -89,26 +107,73 @@ export default function Home() {
     <div className={styles.page}>
       <main className={styles.main}>
         <div style={{ display: "flex", gap: 16, alignItems: "center", flexWrap: "wrap", margin: "0 auto" }}>
-          <input
-            type="number"
-            min={1}
-            max={1000}
-            value={count}
-            onChange={(e) => setCount(Math.max(1, Math.min(1000, parseInt(e.target.value || "1", 10))))}
-            style={{ padding: 8, width: 120 }}
-          />
-          <Button onClick={onGenerate} disabled={isLoading} color="jade">
-            {isLoading ? "Generating..." : "Generate"}
-          </Button>
+          <div style={{ position: "relative", display: "inline-block" }}>
+            <input
+              type="number"
+              min={1}
+              max={100000}
+              value={count}
+              onChange={(e) => setCount(Math.max(1, Math.min(100000, parseInt(e.target.value || "1", 10))))}
+              style={{ padding: "8px 32px 8px 8px", width: 120 }}
+            />
+            <div 
+              className="tooltip-wrapper" 
+              data-tooltip="Clear input"
+              style={{
+                position: "absolute",
+                right: 4,
+                top: "50%",
+                transform: "translateY(-50%)"
+              }}
+            >
+              <button
+                onClick={clearInput}
+                style={{
+                  background: "none",
+                  border: "none",
+                  cursor: "pointer",
+                  color: "var(--foreground)",
+                  fontSize: "16px",
+                  width: 24,
+                  height: 24,
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  borderRadius: 2
+                }}
+              >
+                ×
+              </button>
+            </div>
+          </div>
+          <div className="tooltip-wrapper" data-tooltip={isLoading ? "Generating..." : "Generate wallets"}>
+            <Button onClick={onGenerate} disabled={isLoading} color="jade">
+              {isLoading ? "⏳" : "⚡"}
+            </Button>
+          </div>
           <span>Total generated: {total}</span>
           <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
-            <select value={format} onChange={(e) => setFormat(e.target.value as DownloadFormat)} style={{ padding: 8 }}>
-              <option value="csv">CSV</option>
-              <option value="txt">TXT</option>
-            </select>
-            <Button onClick={onDownload} disabled={wallets.length === 0} color="plum">
-              Download
-            </Button>
+            <div className="tooltip-wrapper" data-tooltip="Export format">
+              <select value={format} onChange={(e) => setFormat(e.target.value as DownloadFormat)} style={{ padding: 8 }}>
+                <option value="csv">CSV</option>
+                <option value="txt">TXT</option>
+              </select>
+            </div>
+            <div className="tooltip-wrapper" data-tooltip="Download wallets">
+              <Button onClick={onDownload} disabled={wallets.length === 0} color="plum">
+                📥
+              </Button>
+            </div>
+            <div className="tooltip-wrapper" data-tooltip="Copy all private keys">
+              <Button onClick={copyAllPrivateKeys} disabled={wallets.length === 0} color="orange" variant="soft">
+                📋
+              </Button>
+            </div>
+            <div className="tooltip-wrapper" data-tooltip="Clear all wallets">
+              <Button onClick={clearAllWallets} disabled={wallets.length === 0} color="red" variant="soft">
+                🗑️
+              </Button>
+            </div>
           </div>
         </div>
 
@@ -182,8 +247,16 @@ export default function Home() {
                           <div style={{ fontFamily: "monospace", wordBreak: "break-all" }}>{w.address}</div>
                           <div style={{ fontFamily: "monospace", wordBreak: "break-all" }}>{w.secretKeyBase58}</div>
                           <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-                            <Button onClick={() => copyToClipboard(w.address)} variant="soft" size="1">Copy Address</Button>
-                            <Button onClick={() => copyToClipboard(w.secretKeyBase58)} variant="soft" size="1">Copy Secret</Button>
+                            <div className="tooltip-wrapper" data-tooltip="Copy address">
+                              <Button onClick={() => copyToClipboard(w.address)} variant="soft" size="1">
+                                📋
+                              </Button>
+                            </div>
+                            <div className="tooltip-wrapper" data-tooltip="Copy private key">
+                              <Button onClick={() => copyToClipboard(w.secretKeyBase58)} variant="soft" size="1">
+                                🔑
+                              </Button>
+                            </div>
                           </div>
                         </div>
                       </div>
