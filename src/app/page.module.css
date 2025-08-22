@@ -6,6 +6,10 @@
   --button-primary-hover: #383838;
   --button-secondary-hover: #f2f2f2;
 
+  /* Solana-inspired accents */
+  --accent-green: #14f195; /* vibrant green */
+  --accent-purple: #9945ff; /* vibrant purple */
+
   display: grid;
   grid-template-rows: 20px 1fr 20px;
   align-items: center;
